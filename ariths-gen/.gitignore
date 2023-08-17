@@ -1,0 +1,17 @@
+__pycache__/
+.vscode
+test.py
+Makefile
+*__pycache__*
+build/
+dist/
+test_circuits/
+tests/tmp.exe
+tests/tmp.c
+tests/tmp.verilog
+html/
+
+*.egg-info
+
+.pytest_cache
+.ipynb_checkpoints

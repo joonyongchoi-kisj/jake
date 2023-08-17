@@ -1,0 +1,7 @@
+astroid
+pep8
+pylint
+pyparsing
+pytest
+pytest-cov
+six
