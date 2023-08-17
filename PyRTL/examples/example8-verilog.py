@@ -65,85 +65,99 @@ full_adder_blif = """
 """
 
 pyrtl.input_from_blif(full_adder_blif)
-# Have to find the actual wire vectors generated from the names in the blif file
-x, y, cin = [pyrtl.working_block().get_wirevector_by_name(s) for s in ['x', 'y', 'cin']]
-io_vectors = pyrtl.working_block().wirevector_subset((pyrtl.Input, pyrtl.Output))
 
-# We are only going to trace the input and output vectors for clarity
-sim_trace = pyrtl.SimulationTrace(wires_to_track=io_vectors)
-# Now simulate the logic with some random inputs
-sim = pyrtl.Simulation(tracer=sim_trace)
-for i in range(15):
-    # here we actually generate random booleans for the inputs
-    sim.step({
-        'x': random.choice([0, 1]),
-        'y': random.choice([0, 1]),
-        'cin': random.choice([0, 1])
-    })
-sim_trace.render_trace(symbol_len=5, segment_size=5)
+timing = pyrtl.TimingAnalysis()
+timing.print_max_length()
+cp = timing.critical_path(print_cp=False)
 
+line_indent = " " * 2
+#  print the critical path
+for cp_with_num in enumerate(cp):
+    print("Critical path", cp_with_num[0], ":")
+    print(line_indent, "The first wire is:", cp_with_num[1][0])
+    for net in cp_with_num[1][1]:
+        print(line_indent, (net))
+    print()
 
-# ---- Exporting to Verilog ----
+# # Have to find the actual wire vectors generated from the names in the blif file
+# x, y, cin = [pyrtl.working_block().get_wirevector_by_name(s) for s in ['x', 'y', 'cin']]
+# io_vectors = pyrtl.working_block().wirevector_subset((pyrtl.Input, pyrtl.Output))
 
-# However, not only do we want to have a method to import from Verilog, we also
-# want a way to export it back out to Verilog as well. To demonstrate PyRTL's
-# ability to export in Verilog, we will create a sample 3-bit counter. However
-# unlike the example in example2, we extend it to be synchronously resetting.
-
-pyrtl.reset_working_block()
-
-zero = pyrtl.Input(1, 'zero')
-counter_output = pyrtl.Output(3, 'counter_output')
-counter = pyrtl.Register(3, 'counter')
-counter.next <<= pyrtl.mux(zero, counter + 1, 0)
-counter_output <<= counter
-
-# The counter gets 0 in the next cycle if the "zero" signal goes high, otherwise just
-# counter + 1.  Note that both "0" and "1" are bit extended to the proper length and
-# here we are making use of that native add operation.  Let's dump this bad boy out
-# to a Verilog file and see what is looks like (here we are using StringIO just to
-# print it to a string for demo purposes; most likely you will want to pass a normal
-# open file).
-
-print("--- PyRTL Representation ---")
-print(pyrtl.working_block())
-print()
-
-print("--- Verilog for the Counter ---")
-with io.StringIO() as vfile:
-    pyrtl.output_to_verilog(vfile)
-    print(vfile.getvalue())
-
-print("--- Simulation Results ---")
-sim_trace = pyrtl.SimulationTrace([counter_output, zero])
-sim = pyrtl.Simulation(tracer=sim_trace)
-for cycle in range(15):
-    sim.step({'zero': random.choice([0, 0, 0, 1])})
-sim_trace.render_trace()
-
-# We already did the "hard" work of generating a test input for this simulation, so
-# we might want to reuse that work when we take this design through a Verilog toolchain.
-# The class OutputVerilogTestbench grabs the inputs used in the simulation trace
-# and sets them up in a standard verilog testbench.
-
-print("--- Verilog for the TestBench ---")
-with io.StringIO() as tbfile:
-    pyrtl.output_verilog_testbench(dest_file=tbfile, simulation_trace=sim_trace)
-    print(tbfile.getvalue())
+# # We are only going to trace the input and output vectors for clarity
+# sim_trace = pyrtl.SimulationTrace(wires_to_track=io_vectors)
+# # Now simulate the logic with some random inputs
+# sim = pyrtl.Simulation(tracer=sim_trace)
+# for i in range(15):
+#     # here we actually generate random booleans for the inputs
+#     sim.step({
+#         'x': random.choice([0, 1]),
+#         'y': random.choice([0, 1]),
+#         'cin': random.choice([0, 1])
+#     })
+# sim_trace.render_trace(symbol_len=5, segment_size=5)
 
 
-# Now let's talk about transformations of the hardware block.  Many times when you are
-# doing some hardware-level analysis you might wish to ignore higher level things like
-# multi-bit wirevectors, adds, concatenation, etc. and just think about wires and basic
-# gates.  PyRTL supports "lowering" of designs into this more restricted set of functionality
-# though the function "synthesize".  Once we lower a design to this form we can then apply
-# basic optimizations like constant propagation and dead wire elimination as well.  By
-# printing it out to Verilog we can see exactly how the design changed.
+# # ---- Exporting to Verilog ----
 
-print("--- Optimized Single-bit Verilog for the Counter ---")
-pyrtl.synthesize()
-pyrtl.optimize()
+# # However, not only do we want to have a method to import from Verilog, we also
+# # want a way to export it back out to Verilog as well. To demonstrate PyRTL's
+# # ability to export in Verilog, we will create a sample 3-bit counter. However
+# # unlike the example in example2, we extend it to be synchronously resetting.
 
-with io.StringIO() as vfile:
-    pyrtl.output_to_verilog(vfile)
-    print(vfile.getvalue())
+# pyrtl.reset_working_block()
+
+# zero = pyrtl.Input(1, 'zero')
+# counter_output = pyrtl.Output(3, 'counter_output')
+# counter = pyrtl.Register(3, 'counter')
+# counter.next <<= pyrtl.mux(zero, counter + 1, 0)
+# counter_output <<= counter
+
+# # The counter gets 0 in the next cycle if the "zero" signal goes high, otherwise just
+# # counter + 1.  Note that both "0" and "1" are bit extended to the proper length and
+# # here we are making use of that native add operation.  Let's dump this bad boy out
+# # to a Verilog file and see what is looks like (here we are using StringIO just to
+# # print it to a string for demo purposes; most likely you will want to pass a normal
+# # open file).
+
+# print("--- PyRTL Representation ---")
+# print(pyrtl.working_block())
+# print()
+
+# print("--- Verilog for the Counter ---")
+# with io.StringIO() as vfile:
+#     pyrtl.output_to_verilog(vfile)
+#     print(vfile.getvalue())
+
+# print("--- Simulation Results ---")
+# sim_trace = pyrtl.SimulationTrace([counter_output, zero])
+# sim = pyrtl.Simulation(tracer=sim_trace)
+# for cycle in range(15):
+#     sim.step({'zero': random.choice([0, 0, 0, 1])})
+# sim_trace.render_trace()
+
+# # We already did the "hard" work of generating a test input for this simulation, so
+# # we might want to reuse that work when we take this design through a Verilog toolchain.
+# # The class OutputVerilogTestbench grabs the inputs used in the simulation trace
+# # and sets them up in a standard verilog testbench.
+
+# print("--- Verilog for the TestBench ---")
+# with io.StringIO() as tbfile:
+#     pyrtl.output_verilog_testbench(dest_file=tbfile, simulation_trace=sim_trace)
+#     print(tbfile.getvalue())
+
+
+# # Now let's talk about transformations of the hardware block.  Many times when you are
+# # doing some hardware-level analysis you might wish to ignore higher level things like
+# # multi-bit wirevectors, adds, concatenation, etc. and just think about wires and basic
+# # gates.  PyRTL supports "lowering" of designs into this more restricted set of functionality
+# # though the function "synthesize".  Once we lower a design to this form we can then apply
+# # basic optimizations like constant propagation and dead wire elimination as well.  By
+# # printing it out to Verilog we can see exactly how the design changed.
+
+# print("--- Optimized Single-bit Verilog for the Counter ---")
+# pyrtl.synthesize()
+# pyrtl.optimize()
+
+# with io.StringIO() as vfile:
+#     pyrtl.output_to_verilog(vfile)
+#     print(vfile.getvalue())

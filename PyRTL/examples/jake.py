@@ -38,8 +38,8 @@ for file in files:
     2. connectivity (input 개수, output 개수) => OK
     3. input/output 개수의 비율 => OK
     4. circuit들의 traffic (busyness)
-    5. 총 connection 수 (point-to-point connections)
-    6. critical path와 critical path에서 필요한 hop의 수 measure/count
+    5. 총 connection 수 (point-to-point connections) => OK?
+    6. critical path와 critical path에서 필요한 hop의 수 measure/count => OK
     7. regression
     """
 
@@ -75,6 +75,11 @@ for file in files:
     # We are also able to print out the critical paths as well as get them
     # back as an array.
     critical_path_info = timing.critical_path(print_cp=False)
+    line_indent = " " * 2
+    #  print the critical path
+    for cp_num, cp in enumerate(critical_path_info):
+        print("Critical path", cp_num, ":", "from ",
+              cp[0], ", hop count: ", len(cp[1]))
 
     # --- Part 2: Area Analysis --------------------------------------------------
 
