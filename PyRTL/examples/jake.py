@@ -90,5 +90,3 @@ for file in files:
     est_area = logic_area + mem_area
     print("Estimated Area of block", est_area, "sq mm")
     print()
-
-    break
