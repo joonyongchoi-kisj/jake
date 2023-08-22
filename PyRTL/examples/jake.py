@@ -18,8 +18,18 @@ for root, dirnames, filenames in os.walk(curr_file_dir + '/../../ariths-gen/'):
         files.append(os.path.join(root, filename))
 
 for file in files:
+    """
+    1. number of items of time and area => Time & Area 면 OK
+    2. connectivity (input 개수, output 개수) => OK
+    3. input/output 개수의 비율 => OK
+    4. circuit들의 traffic (busyness)
+    5. 총 connection 수 (point-to-point connections) => OK?
+    6. critical path와 critical path에서 필요한 hop의 수 measure/count => OK
+    7. regression
+    """
     ##############################
     # 1. blifparser
+    # blif 파일 -> graph
     filepath = os.path.abspath(file)
     print(filepath)
     parser = blifparser.BlifParser(filepath)
@@ -30,18 +40,9 @@ for file in files:
     # retrive networkx graph: can be used to export it as an image or customize it
     nx_graph = graph_data.nx_graph
 
+
     print("number of edges: ", nx_graph.number_of_edges())
     print("number of nodes: ", nx_graph.number_of_nodes())
-
-    """
-    1. number of items of time and area => Time & Area 면 OK
-    2. connectivity (input 개수, output 개수) => OK
-    3. input/output 개수의 비율 => OK
-    4. circuit들의 traffic (busyness)
-    5. 총 connection 수 (point-to-point connections) => OK?
-    6. critical path와 critical path에서 필요한 hop의 수 measure/count => OK
-    7. regression
-    """
 
     ##############################
 
@@ -78,8 +79,7 @@ for file in files:
     line_indent = " " * 2
     #  print the critical path
     for cp_num, cp in enumerate(critical_path_info):
-        print("Critical path", cp_num, ":", "from ",
-              cp[0], ", hop count: ", len(cp[1]))
+        print("Critical path", cp_num, ":", "from ", cp[0], ", hop count: ", len(cp[1]))
 
     # --- Part 2: Area Analysis --------------------------------------------------
 
@@ -90,5 +90,3 @@ for file in files:
     est_area = logic_area + mem_area
     print("Estimated Area of block", est_area, "sq mm")
     print()
-
-    break
